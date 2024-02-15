@@ -1,5 +1,5 @@
 import sqlite3
-from .HTCondorJob import HTCondorJob
+from .condor_job import HTCondorJob
 import pickle
 import logging
 import copy
