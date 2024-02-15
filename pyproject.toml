@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "resource-availability-monitoring"
-version = "0.2.0"
+version = "0.2.1"
 description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
 authors = ["Sebastian Brommer <brommer.sebastian@gmail.com>"]
 license = "{file = \"LICENSE\"}"
