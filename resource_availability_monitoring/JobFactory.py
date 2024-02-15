@@ -1,18 +1,15 @@
 from .HTCondorJob import HTCondorJob
 import time
 import logging
-from .InfluxDBWriter import write_to_influxdb
 import threading
 
 log = logging.getLogger(__name__)
 
 
 class JobFactory(object):
-    def __init__(
-        self, database, influx_parameters, htcondor_schedd, configdir, workdir
-    ):
+    def __init__(self, database, influx_writer, htcondor_schedd, configdir, workdir):
         self.database = database
-        self.influx_parameters = influx_parameters
+        self.influx_writer = influx_writer
         self.htcondor_schedd = htcondor_schedd
         self.configdir = configdir
         self.workdir = workdir
@@ -62,14 +59,11 @@ class JobFactory(object):
             log.info("Job {} has passed".format(job.job_name))
             job.cleanup_outputs()
         # write the test results to influxdb
-        write_to_influxdb(
-            self.influx_parameters["url"],
-            self.influx_parameters["token"],
-            self.influx_parameters["org"],
-            self.influx_parameters["bucket"],
-            "testresults",
-            results,
-        )
+        if self.influx_writer:
+            self.influx_writer.write_to_influxdb(
+                "testresults",
+                results,
+            )
 
     def pickup_jobs(self):
         log.warning("Picking up jobs")

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "resource-monitoring"
-version = "0.0.11.6"
+name = "resource-availability-monitoring"
+version = "0.1.0"
 description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
 authors = ["Sebastian Brommer <brommer.sebastian@gmail.com>"]
 license = "{file = \"LICENSE\"}"
 readme = "README.md"
-packages = [{include = "resource_monitoring"}]
+packages = [{include = "resource_availability_monitoring"}]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -37,4 +37,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-resource-monitoring-cli = "resource_monitoring.__main__:main_cli"
+ram-cli = "resource_availability_monitoring.__main__:main_cli"

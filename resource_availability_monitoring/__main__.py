@@ -3,6 +3,7 @@ import yaml
 from .JobFactory import JobFactory
 from .JobScheduler import JobScheduler
 from .JobDatabase import JobDatabase
+from .InfluxDBWriter import InfluxDBWriter
 import argparse
 import htcondor
 import shutil
@@ -63,10 +64,16 @@ def parse_args():
         default=False,
         help="Check if the given configuration is valid and exit",
     )
+    parser.add_argument(
+        "--no-influxdb",
+        action="store_true",
+        default=False,
+        help="Do not write to InfluxDB, only run the jobs",
+    )
     return parser.parse_args()
 
 
-def load_influxdb_config(config_file):
+def load_yaml(config_file):
     with open(config_file) as f:
         config = yaml.safe_load(f)
     return config
@@ -102,8 +109,7 @@ def calculate_number_of_required_workers(config):
 
 
 def check_config(config_file):
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
+    config = load_yaml(config_file)
     enabled_job_config = get_enabled_job_config(config)["jobs"]
     testjobs = [enabled_job_config[x]["name"] for x in range(len(enabled_job_config))]
     log.info("Enabled jobs: {}".format(testjobs))
@@ -162,11 +168,14 @@ def main_cli():
             )
             exit(1)
     Path(args.workdir).mkdir(parents=True, exist_ok=True)
-    influx_parameters = load_influxdb_config(args.influxdb_config_file)
+    if not args.no_influxdb:
+        influx_writer = InfluxDBWriter(load_yaml(args.influxdb_config_file))
+    else:
+        influx_writer = None
     htcondor_schedd = htcondor.Schedd()
     database = JobDatabase(args.job_db_file)
     factory = JobFactory(
-        database, influx_parameters, htcondor_schedd, args.configdir, args.workdir
+        database, influx_writer, htcondor_schedd, args.configdir, args.workdir
     )
     if args.check:
         check_config(args.config_file)
