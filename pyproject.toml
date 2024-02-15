@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "resource-monitoring"
-version = "0.0.5"
+name = "resource_monitoring"
+version = "0.0.6"
 authors = [
     { name = "Sebastian Brommer", email = "brommer.sebastian@gmail.com" },
 ]
@@ -25,7 +25,7 @@ Homepage = "https://github.com/harrypuuter/ram"
 Issues = "https://github.com/harrypuuter/ram/issues"
 
 [project.scripts]
-resource-monitoring-cli = "resource-monitoring.__main__:main_cli"
+resource-monitoring-cli = "resource_monitoring.__main__:main_cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/job_scripts"]
