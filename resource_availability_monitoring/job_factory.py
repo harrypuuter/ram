@@ -1,4 +1,4 @@
-from .HTCondorJob import HTCondorJob
+from .condor_job import HTCondorJob
 import time
 import logging
 import threading
