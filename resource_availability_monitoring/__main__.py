@@ -70,7 +70,7 @@ def parse_args():
         default=False,
         help="Do not write to InfluxDB, only run the jobs",
     )
-    return parser.parse_args()
+    return parser.parse_args(unknown)
 
 
 def load_yaml(config_file):
