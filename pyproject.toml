@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ressource-monitoring"
+version = "0.0.1"
+authors = [
+    { name = "Sebastian Brommer", email = "brommer.sebastian@gmail.com" },
+]
+description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.txt"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+]
+dependencies = ["htcondor", "influxdb-client", "PyYAML", "schedule"]
+
+[project.urls]
+Homepage = "https://github.com/harrypuuter/ram"
+Issues = "https://github.com/harrypuuter/ram/issues"
+
+[project.scripts]
+spam-cli = "ressource-moniitoring:main"

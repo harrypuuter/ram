@@ -17,6 +17,7 @@ def parse_args():
         "--influxdb-config-file", type=str, default="influx_parameters.yml"
     )
     parser.add_argument("--job-db-file", type=str, default="jobs.sqlite3")
+    parser.add_argument("--job-scripts-dir", type=str, default="job_scripts")
     return parser.parse_args()
 
 
@@ -81,7 +82,7 @@ if __name__ == "__main__":
     influx_parameters = load_influxdb_config(args.influxdb_config_file)
     htcondor_schedd = htcondor.Schedd()
     database = JobDatabase(args.job_db_file)
-    factory = JobFactory(database, influx_parameters, htcondor_schedd)
+    factory = JobFactory(database, influx_parameters, htcondor_schedd, args.job_scripts_dir)
     factory.pickup_jobs()
 
     load_config_and_schedule_jobs(args.config_file, factory)

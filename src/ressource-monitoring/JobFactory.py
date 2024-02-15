@@ -8,10 +8,11 @@ log = logging.getLogger(__name__)
 
 
 class JobFactory(object):
-    def __init__(self, database, influx_parameters, htcondor_schedd):
+    def __init__(self, database, influx_parameters, htcondor_schedd, job_scripts_dir):
         self.database = database
         self.influx_parameters = influx_parameters
         self.htcondor_schedd = htcondor_schedd
+        self.job_scripts_dir = job_scripts_dir
         self.unfinished_jobs = []
 
     def is_first_run(self):
@@ -29,7 +30,7 @@ class JobFactory(object):
     def run_job(self, job_config, job_name):
         log.info("Running job {}".format(job_name))
         # create the job object
-        job = HTCondorJob(job_config, job_name, time.time(), self.htcondor_schedd)
+        job = HTCondorJob(job_config, job_name, time.time(), self.htcondor_schedd, self.job_scripts_dir)
         self.unfinished_jobs.append(job)
         # run the job
         job.submit_job()
