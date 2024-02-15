@@ -1,0 +1,22 @@
+jobs:
+  - name: "default"
+    parameters:
+      enabled: true
+      description: "Default Test"
+      site: "Default"
+      interval: 1200 # in seconds
+      timeout: 1200 # in seconds
+      job:
+        executable: "default.sh"
+        arguments: ""
+        universe: "vanilla"
+        output_file: "job_result.yaml"
+        output: "default.out"
+        error: "default.err"
+        log: "default.log"
+      requirements:
+        cpu: 1
+        memory: 1000
+        disk: 100000
+        gpu: 0
+        requirements: ''
