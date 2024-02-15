@@ -12,12 +12,18 @@ log = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", default=False)
-    parser.add_argument("--config-file", type=str, default="config.yml")
     parser.add_argument(
-        "--influxdb-config-file", type=str, default="influx_parameters.yml"
+        "--config-file", type=str, default="job_configuration/config.yml"
     )
-    parser.add_argument("--job-db-file", type=str, default="jobs.sqlite3")
-    parser.add_argument("--job-scripts-dir", type=str, default="job_scripts")
+    parser.add_argument(
+        "--influxdb-config-file",
+        type=str,
+        default="job_configuration/influx_parameters.yml",
+    )
+    parser.add_argument(
+        "--job-db-file", type=str, default="job_configuration/jobs.sqlite3"
+    )
+    parser.add_argument("--job-scripts-dir", type=str, default="job_configuration")
     return parser.parse_args()
 
 
