@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "resource-monitoring"
-version = "0.0.1"
+version = "0.0.4"
 authors = [
     { name = "Sebastian Brommer", email = "brommer.sebastian@gmail.com" },
 ]
 description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
 readme = "README.md"
 requires-python = ">=3.8"
-license = {file = "LICENSE.txt"}
+license = {file = "LICENSE"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -26,3 +26,6 @@ Issues = "https://github.com/harrypuuter/ram/issues"
 
 [project.scripts]
 resource-monitoring-cli = "main:main_cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/job_scripts"]
