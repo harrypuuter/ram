@@ -20,3 +20,6 @@ poetry = "^1.7.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+resource-monitoring-cli = "resource_monitoring.__main__:main_cli"
