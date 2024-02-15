@@ -1,9 +1,10 @@
 import sqlite3
 import os
-from HTCondorJob import HTCondorJob
+from .HTCondorJob import HTCondorJob
 import pickle
 import logging
 import copy
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class JobDatabase(object):
           sqlite_file: The `sqlite_file` parameter is the file path or name of the SQLite database file that
         will be used for storing data.
         """
-        self.sqlite_file = sqlite_file
+        self.sqlite_file = Path(sqlite_file).absolute()
         self.initialize()
         self.cleanup_old_jobs(retention_days=7)
 
@@ -29,7 +30,7 @@ class JobDatabase(object):
         The `initialize` function checks if a SQLite database file exists, and if not, creates a new
         database with a table called "jobs".
         """
-        if not os.path.exists(self.sqlite_file):
+        if not self.sqlite_file.exists():
             log.info("Creating new database at {}".format(self.sqlite_file))
             conn = sqlite3.connect(self.sqlite_file)
             c = conn.cursor()

@@ -1,7 +1,7 @@
-from HTCondorJob import HTCondorJob
+from .HTCondorJob import HTCondorJob
 import time
 import logging
-from InfluxDBWriter import write_to_influxdb
+from .InfluxDBWriter import write_to_influxdb
 import threading
 
 log = logging.getLogger(__name__)
