@@ -76,13 +76,20 @@ def load_config_and_schedule_jobs(config_file, factory):
     scheduler.run()
 
 
-if __name__ == "__main__":
+def main_cli():
+    # This is the main entry point for the resource-monitoring tool
     args = parse_args()
     setup_logging()
     influx_parameters = load_influxdb_config(args.influxdb_config_file)
     htcondor_schedd = htcondor.Schedd()
     database = JobDatabase(args.job_db_file)
-    factory = JobFactory(database, influx_parameters, htcondor_schedd, args.job_scripts_dir)
+    factory = JobFactory(
+        database, influx_parameters, htcondor_schedd, args.job_scripts_dir
+    )
     factory.pickup_jobs()
 
     load_config_and_schedule_jobs(args.config_file, factory)
+
+
+if __name__ == "__main__":
+    main_cli()
