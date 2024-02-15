@@ -5,25 +5,30 @@ from JobScheduler import JobScheduler
 from JobDatabase import JobDatabase
 import argparse
 import htcondor
+import shutil
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", default=False)
+    parser.add_argument("--workdir", type=str, default=".")
+    parser.add_argument("--configdir", type=str, default="job_configuration")
+    args, unknown = parser.parse_known_args()
     parser.add_argument(
-        "--config-file", type=str, default="job_configuration/config.yml"
+        "--config-file", type=str, default=Path(args.configdir) / "config.yml"
     )
     parser.add_argument(
         "--influxdb-config-file",
         type=str,
-        default="job_configuration/influx_parameters.yml",
+        default=Path(args.configdir) / "influx_parameters.yml",
     )
     parser.add_argument(
-        "--job-db-file", type=str, default="job_configuration/jobs.sqlite3"
+        "--job-db-file", type=str, default=Path(args.workdir) / "jobs.sqlite3"
     )
-    parser.add_argument("--job-scripts-dir", type=str, default="job_configuration")
+
+    parser.add_argument("--initialize", action="store_true", default=False)
     return parser.parse_args()
 
 
@@ -82,18 +87,43 @@ def load_config_and_schedule_jobs(config_file, factory):
     scheduler.run()
 
 
+def initialize_configs(configdir):
+    # if the configdir exists, exit
+    if Path(configdir).exists():
+        log.error(f"Config directory {configdir} already exists. Exiting.")
+        exit(1)
+    log.info(
+        f"Initializing tool for the first time, setting up a default config in {configdir}"
+    )
+    Path(configdir).mkdir(parents=True, exist_ok=True)
+    default_config = Path(__file__).parent / "default_configuration"
+    shutil.copytree(default_config, configdir)
+    log.info(f"Default configuration copied to {configdir}")
+    log.info("Please edit the configuration files to enable jobs and set parameters")
+    exit(0)
+
+
 def main_cli():
     # This is the main entry point for the resource-monitoring tool
     args = parse_args()
     setup_logging()
+    if args.initialize:
+        initialize_configs(args.configdir)
+    # check if relevant config files exist
+    for relevant_file in [args.config_file, args.influxdb_config_file]:
+        if not relevant_file.exists():
+            log.error(
+                "Config file not found at {}. Exiting.".format(relevant_file.absolute())
+            )
+            exit(1)
+    Path(args.workdir).mkdir(parents=True, exist_ok=True)
     influx_parameters = load_influxdb_config(args.influxdb_config_file)
     htcondor_schedd = htcondor.Schedd()
     database = JobDatabase(args.job_db_file)
     factory = JobFactory(
-        database, influx_parameters, htcondor_schedd, args.job_scripts_dir
+        database, influx_parameters, htcondor_schedd, args.configdir, args.workdir
     )
     factory.pickup_jobs()
-
     load_config_and_schedule_jobs(args.config_file, factory)
 
 

@@ -1,31 +1,22 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name = "resource_monitoring"
-version = "0.0.6"
-authors = [
-    { name = "Sebastian Brommer", email = "brommer.sebastian@gmail.com" },
-]
+[tool.poetry]
+name = "resource-monitoring"
+version = "0.0.8"
 description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
+authors = ["Sebastian Brommer <brommer.sebastian@gmail.com>"]
+license = "{file = \"LICENSE\"}"
 readme = "README.md"
-requires-python = ">=3.8"
-license = {file = "LICENSE"}
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha",
-]
-dependencies = ["htcondor", "influxdb-client", "PyYAML", "schedule"]
+packages = [{include = "resource_monitoring"}]
 
-[project.urls]
-Homepage = "https://github.com/harrypuuter/ram"
-Issues = "https://github.com/harrypuuter/ram/issues"
+[tool.poetry.dependencies]
+python = ">=3.8"
+htcondor = "^23.4.0"
+PyYAML = "^6.0.1"
+schedule = "^1.2.1"
+influxdb-client = "^1.40.0"
 
-[project.scripts]
-resource-monitoring-cli = "resource_monitoring.__main__:main_cli"
+[tool.poetry.group.dev.dependencies]
+poetry = "^1.7.1"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/job_scripts"]
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

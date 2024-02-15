@@ -9,13 +9,15 @@ log = logging.getLogger(__name__)
 
 
 class HTCondorJob(object):
-    def __init__(self, job_config, job_name, submission_time, schedd, job_scripts_dir):
+    def __init__(
+        self, job_config, job_name, submission_time, schedd, configdir, workdir
+    ):
         self.job_config = job_config
         self.job_name = job_name
         self.submission_dict = {}
-        self.job_data_folder = Path(job_scripts_dir) / self.job_name
-        self.logs_folder = Path("logs") / self.job_name
-        self.results_folder = Path("results") / self.job_name
+        self.job_data_folder = Path(configdir) / self.job_name
+        self.logs_folder = Path(workdir) / "logs" / self.job_name
+        self.results_folder = Path(workdir) / "results" / self.job_name
         self.result_file_path = str(
             self.results_folder
             / f'id_$(Cluster)-$(Process)-{self.job_config["job"]["output_file"]}'
