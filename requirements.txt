@@ -1,0 +1,5 @@
+htcondor
+influxdb
+influxdb-client
+PyYAML
+schedule

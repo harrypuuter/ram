@@ -1,0 +1,45 @@
+jobs:
+  - name: "gridka-base"
+    parameters:
+      enabled: true
+      description: "Base Test on GridKA"
+      site: "GridKA"
+      interval: 1200 # in seconds
+      timeout: 1200 # in seconds
+      job:
+        executable: "base.sh"
+        arguments: ""
+        universe: "vanilla"
+        output_file: "job_result.yaml"
+        output: "darwin_base.out"
+        error: "darwin_base.err"
+        log: "darwin_base.log"
+      requirements:
+        cpu: 1
+        memory: 1000
+        disk: 1000000
+        gpu: 0
+        requirements: 'TARGET.Cloudsite == "GridKA" && TARGET.HasSingularity'
+  - name: "gridka-load"
+    parameters:
+      enabled: true
+      interval: 1200 # in seconds
+      timeout: 3600 # in seconds
+      description: "Load Test on GridKA"
+      site: "GridKA"
+      job:
+        executable: "base.sh"
+        arguments: ""
+        universe: "vanilla"
+        output_file: "job_result.yaml"
+        output: "darwin_load.out"
+        error: "darwin_load.err"
+        log: "darwin_load.log"
+      requirements:
+        cpu: 1
+        memory: 2000
+        disk: 5000000
+        gpu: 0
+        requirements: 'TARGET.Cloudsite == "GridKA" && TARGET.HasSingularity'
+
+
