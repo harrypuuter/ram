@@ -29,20 +29,26 @@ def parse_args():
     parser.add_argument(
         "--config-file",
         type=str,
-        default=Path(args.configdir) / "config.yml",
+        default=Path(args.configdir).absolute() / "config.yml",
         help="Path to the configuration file for the jobs, default is configdir/config.yml",
     )
     parser.add_argument(
         "--influxdb-config-file",
         type=str,
-        default=Path(args.configdir) / "influx_parameters.yml",
+        default=Path(args.configdir).absolute() / "influx_parameters.yml",
         help="Path to the InfluxDB configuration file, default is configdir/influx_parameters.yml",
     )
     parser.add_argument(
         "--job-db-file",
         type=str,
-        default=Path(args.workdir) / "jobs.sqlite3",
+        default=Path(args.workdir).absolute() / "jobs.sqlite3",
         help="Path to the job database file, default is workdir/jobs.sqlite3",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        default=Path(args.workdir).absolute() / "remote-testsuite.log",
+        help="Path to the log file, default is workdir/remote-testsuite.log",
     )
 
     parser.add_argument(
@@ -66,13 +72,13 @@ def load_influxdb_config(config_file):
     return config
 
 
-def setup_logging(workdir):
+def setup_logging(log_file):
     logger = logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler(Path(workdir) / "remote-testsuite.log"),
+            logging.FileHandler(log_file),
         ],
     )
     return logger
@@ -145,13 +151,15 @@ def initialize_configs(configdir):
 def main_cli():
     # This is the main entry point for the resource-monitoring tool
     args = parse_args()
-    setup_logging(args.workdir)
+    setup_logging(args.log_file)
     if args.initialize:
         initialize_configs(args.configdir)
     # check if relevant config files exist
-    for relevant_file in [args.config_file, args.influxdb_config_file, args.workdir]:
-        if not relevant_file.exists():
-            log.error("Not able to find {}. Exiting.".format(relevant_file.absolute()))
+    for relevant_file in [args.config_file, args.influxdb_config_file]:
+        if not Path(relevant_file).absolute().exists():
+            log.error(
+                "Not able to find {}. Exiting.".format(Path(relevant_file).absolute())
+            )
             exit(1)
     Path(args.workdir).mkdir(parents=True, exist_ok=True)
     influx_parameters = load_influxdb_config(args.influxdb_config_file)
