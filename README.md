@@ -38,12 +38,14 @@ jobs:
       timeout: 1200 # maximum time the testjob has to finish (in seconds)
       job:
         executable: "default.sh" # The executable to be run, has to be located in <configdir>/<name of job>/
+        AccountingGroup: "group" # The accounting group to be used by HTCondor
         arguments: "" # Arguments to be passed to the executable
-        universe: "vanilla" # The universe to be used by HTCondor
         output_file: "job_result.yaml" # The file to which the result of the job is written
         output: "default.out" # The file to which the stdout of the job is written
         error: "default.err" # The file to which the stderr of the job is written
         log: "default.log" # The file to which the HTCondor of the job is written
+        universe: "vanilla" # The universe to be used by HTCondor
+        docker_image: "" # The docker image to be used by HTCondor (only if universe is set to docker)
       requirements: '' # Requirements to be passed to HTCondor
         cpu: 1 # The number of CPUs to be used by the job
         memory: 1000 # The amount of memory to be used by the job (in MB)
@@ -99,7 +101,14 @@ ram-cli --configdir /path/to/your/configdir --workdir /path/to/your/workdir
 
 ### Systemd Service
 
-To run the service as a systemd service, some best practices should be followed. The service should be run as a dedicated user, and the configuration and workdir should be owned by this user. After the user is created, setup a python venv, where the package is installed. The service file should be located in `/etc/systemd/system/`, and should contain the following content:
+To run the service as a systemd service, some best practices should be followed. The service should be run as a dedicated user, and the configuration and workdir should be owned by this user. After the user is created, setup a python venv, where the package is installed:
+```bash
+python3 -m venv /path/to/your/venv
+source /path/to/your/venv/bin/activate
+pip3 install resource-availability-monitoring
+```
+
+The service file should be located in `/etc/systemd/system/`, and should contain the following content and be named `resource-availability-monitoring.service`:
 
 ```bash
 [Unit]
@@ -121,4 +130,10 @@ Environment="PATH=/path/to/your/venv/bin"
 ExecStart=ram-cli --configdir /path/to/your/configdir --workdir /path/to/your/workdir
 Restart=on-failure
 RestartSec=300s
+```
+
+After the service file has been created, the service can be started via
+
+```bash
+systemctl start resource-availability-monitoring
 ```

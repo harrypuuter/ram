@@ -8,8 +8,10 @@ jobs:
       timeout: 1200 # in seconds
       job:
         executable: "default.sh"
+        AccountingGroup: "sitetest"
         arguments: ""
         universe: "vanilla"
+        docker_image: None # only id universe is docker
         output_file: "job_result.yaml"
         output: "default.out"
         error: "default.err"
