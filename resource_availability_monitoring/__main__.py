@@ -250,7 +250,8 @@ def main_cli():
         if not Path(relevant_file).absolute().exists():
             log.error("Not able to find %s. Exiting.", Path(relevant_file).absolute())
             exit(1)
-    Path(args.workdir).mkdir(parents=True, exist_ok=True)
+    Path(args.workdir).absolute().mkdir(parents=True, exist_ok=True)
+    log.info("Using workdir: %s", Path(args.workdir).absolute())
     if not args.no_influxdb:
         influx_writer = InfluxDBWriter(load_yaml(args.influxdb_config_file))
     else:
@@ -258,7 +259,11 @@ def main_cli():
     htcondor_schedd = htcondor.Schedd()
     database = JobDatabase(args.job_db_file)
     factory = JobFactory(
-        database, influx_writer, htcondor_schedd, args.configdir, args.workdir
+        database,
+        influx_writer,
+        htcondor_schedd,
+        args.configdir.absolute(),
+        args.workdir.absolute(),
     )
     if args.check:
         check_config(args.config_file)

@@ -15,9 +15,9 @@ class HTCondorJob(object):
         self.job_config = job_config
         self.job_name = job_name
         self.submission_dict = {}
-        self.job_data_folder = Path(configdir) / self.job_name
-        self.logs_folder = Path(workdir) / "logs" / self.job_name
-        self.results_folder = Path(workdir) / "results" / self.job_name
+        self.job_data_folder = Path(configdir).absolute() / self.job_name
+        self.logs_folder = Path(workdir).absolute() / "logs" / self.job_name
+        self.results_folder = Path(workdir).absolute() / "results" / self.job_name
         self.result_file_path = str(
             self.results_folder
             / f'id_$(Cluster)-$(Process)-{self.job_config["job"]["output_file"]}'
@@ -57,10 +57,14 @@ class HTCondorJob(object):
             self.job_data_folder / self.job_config["job"]["executable"]
         )
         self.submission_dict["arguments"] = self.job_config["job"]["arguments"]
-        self.submission_dict["AccountingGroup"] = self.job_config["job"]["AccountingGroup"]
+        self.submission_dict["AccountingGroup"] = self.job_config["job"][
+            "AccountingGroup"
+        ]
         self.submission_dict["universe"] = self.job_config["job"]["universe"]
         if self.submission_dict["universe"] == "docker":
-            self.submission_dict["docker_image"] = self.job_config["job"]["docker_image"]
+            self.submission_dict["docker_image"] = self.job_config["job"][
+                "docker_image"
+            ]
         self.submission_dict["should_transfer_files"] = "YES"
         self.submission_dict["when_to_transfer_output"] = "ON_EXIT_OR_EVICT"
         if "input_files" in self.job_config["job"].keys():
