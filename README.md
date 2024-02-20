@@ -117,7 +117,7 @@ After=network.target
 Wants=network-online.target
 After=network-online.target
 
-[Intstall]
+[Install]
 WantedBy=multi-user.target
 
 [Service]
@@ -126,8 +126,7 @@ User=ram
 Group=ram
 LimitNOFILE=65536
 WorkingDirectory=/path/to/your/workdir
-Environment="PATH=/path/to/your/venv/bin"
-ExecStart=ram-cli --configdir /path/to/your/configdir --workdir /path/to/your/workdir
+ExecStart=/path/to/your/venv/bin/python3 -m resource_availability_monitoring --configdir /path/to/your/configdir --workdir /path/to/your/workdir
 Restart=on-failure
 RestartSec=300s
 ```
