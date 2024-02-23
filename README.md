@@ -84,7 +84,33 @@ Set all parameters to the correct values to enable the writing of the results to
 All command line options can be displayed via
 
 ```bash
-ram-cli --help
+ram-cli -h
+usage: __main__.py [-h] --workdir WORKDIR --configdir CONFIGDIR
+                   [--config-file CONFIG_FILE]
+                   [--influxdb-config-file INFLUXDB_CONFIG_FILE]
+                   [--job-db-file JOB_DB_FILE] [--log-file LOG_FILE]
+                   [--initialize] [--check] [--no-influxdb]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --workdir WORKDIR     Directory to store job results, job logs and job
+                        database
+  --configdir CONFIGDIR
+                        Directory to store configuration files and job scripts
+  --config-file CONFIG_FILE
+                        Path to the configuration file for the jobs, default
+                        is <configdir>/config.yml
+  --influxdb-config-file INFLUXDB_CONFIG_FILE
+                        Path to the InfluxDB configuration file, default is
+                        <configdir>/influx_parameters.yml
+  --job-db-file JOB_DB_FILE
+                        Path to the job database file, default is
+                        <workdir>/jobs.sqlite3
+  --log-file LOG_FILE   Path to the log file, default is <workdir>/remote-
+                        testsuite.log
+  --initialize          Initialize the tool with default configuration
+  --check               Check if the given configuration is valid and exit
+  --no-influxdb         Do not write to InfluxDB, only run the jobs
 ```
 
 After the configuration has been adjusted, the configuration and Influxdb parameters can be tested via
