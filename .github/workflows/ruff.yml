@@ -6,3 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: chartboost/ruff-action@v1
+        with:
+          src: "./resource_availability_monitoring"
+          version: 0.2.2
+          args: --show-fixes
