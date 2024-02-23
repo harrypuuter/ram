@@ -16,6 +16,23 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
+def absolute_path(path):
+    """
+    The function `absolute_path` takes a path as input and returns its absolute path.
+
+    Args:
+      path: The `absolute_path` function takes a `path` as input and returns the absolute path of that
+    input. If the input `path` is `None`, the function will return `None`.
+
+    Returns:
+      the absolute path of the input `path`. If the input `path` is `None`, then the function will
+    return `None`.
+    """
+    if path is None:
+        return None
+    return Path(path).absolute()
+
+
 def parse_args():
     """
     The `parse_args` function is used to parse command line arguments and return the parsed arguments.
@@ -27,40 +44,40 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--workdir",
-        type=str,
+        type=absolute_path,
         required=True,
         help="Directory to store job results, job logs and job database",
     )
     parser.add_argument(
         "--configdir",
-        type=str,
+        type=absolute_path,
         required=True,
         help="Directory to store configuration files and job scripts",
     )
     parser.add_argument(
         "--config-file",
-        type=str,
+        type=absolute_path,
         # default=Path(args.configdir).absolute() / "config.yml",
         default=None,
         help="Path to the configuration file for the jobs, default is <configdir>/config.yml",
     )
     parser.add_argument(
         "--influxdb-config-file",
-        type=str,
+        type=absolute_path,
         # default=Path(args.configdir).absolute() / "influx_parameters.yml",
         default=None,
         help="Path to the InfluxDB configuration file, default is <configdir>/influx_parameters.yml",
     )
     parser.add_argument(
         "--job-db-file",
-        type=str,
+        type=absolute_path,
         # default=Path(args.workdir).absolute() / "jobs.sqlite3",
         default=None,
         help="Path to the job database file, default is <workdir>/jobs.sqlite3",
     )
     parser.add_argument(
         "--log-file",
-        type=str,
+        type=absolute_path,
         # default=Path(args.workdir).absolute() / "remote-testsuite.log",
         default=None,
         help="Path to the log file, default is <workdir>/remote-testsuite.log",
@@ -87,15 +104,13 @@ def parse_args():
     args = parser.parse_args()
     # now set the defaults, if not given an argument
     if not args.config_file:
-        args.config_file = Path(args.configdir).absolute() / "config.yml"
+        args.config_file = args.configdir / "config.yml"
     if not args.influxdb_config_file:
-        args.influxdb_config_file = (
-            Path(args.configdir).absolute() / "influx_parameters.yml"
-        )
+        args.influxdb_config_file = args.configdir / "influx_parameters.yml"
     if not args.job_db_file:
-        args.job_db_file = Path(args.workdir).absolute() / "jobs.sqlite3"
+        args.job_db_file = args.workdir / "jobs.sqlite3"
     if not args.log_file:
-        args.log_file = Path(args.workdir).absolute() / "resource-monitoring.log"
+        args.log_file = args.workdir / "resource-monitoring.log"
     return args
 
 
