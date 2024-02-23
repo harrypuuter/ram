@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "resource-availability-monitoring"
-version = "0.2.5"
+version = ""
 description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
 authors = ["Sebastian Brommer <brommer.sebastian@gmail.com>"]
 license = "{file = \"LICENSE\"}"
@@ -38,3 +38,15 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 ram-cli = "resource_availability_monitoring.__main__:main_cli"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+pattern  = "^(?P<base>\\d+\\.\\d+\\.\\d+)(-?((?P<stage>[a-zA-Z]+)\\.?(?P<revision>\\d+)?))?"
+format-jinja = """
+    {%- if distance == 0 -%}
+        {{- base -}}
+    {%- else -%}
+        {{- base }}.dev{{ distance }}+g{{commit}}
+    {%- endif -%}
+"""
