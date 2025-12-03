@@ -1,7 +1,9 @@
-from .condor_job import HTCondorJob
-import time
 import logging
 import threading
+import time
+
+from .condor_job import HTCondorJob
+from .constants import JOB_STATUS_COMPLETED, JOB_STATUS_SUBMITTED
 
 log = logging.getLogger(__name__)
 
@@ -20,15 +22,13 @@ class JobFactory(object):
 
     def report(self):
         log.debug("JobFactory report:")
-        log.debug(
-            "Number of jobs in database: {}".format(self.database.get_number_of_jobs())
-        )
-        log.debug("Unfinished jobs: {}".format(len(self.unfinished_jobs)))
+        log.debug(f"Number of jobs in database: {self.database.get_number_of_jobs()}")
+        log.debug(f"Unfinished jobs: {len(self.unfinished_jobs)}")
         for job in self.unfinished_jobs:
             job.report()
 
     def run_job(self, job_config, job_name):
-        log.info("Running job {}".format(job_name))
+        log.info(f"Running job {job_name}")
         # create the job object
         job = HTCondorJob(
             job_config,
@@ -41,10 +41,10 @@ class JobFactory(object):
         self.unfinished_jobs.append(job)
         # run the job
         job.submit_job()
-        self.database.add_job(job, 2)  # 2 is the status for "Submitted"
+        self.database.add_job(job, JOB_STATUS_SUBMITTED)
         job.wait_for_job()
         self.collect_job_results(job)
-        self.database.update_job_status(job, 1)  # 1 is the status for "Completed"
+        self.database.update_job_status(job, JOB_STATUS_COMPLETED)
         self.unfinished_jobs.remove(job)
 
     def collect_job_results(self, job):
@@ -53,10 +53,10 @@ class JobFactory(object):
         # get job results from history
         job.get_condor_history_details()
         test_total_duration = time.time() - job.submission_time
-        log.info("Job runtime: {}".format(job.runtime))
+        log.info(f"Job runtime: {job.runtime}")
         results = self.construct_results(job, test_total_duration)
         if job.has_passed():
-            log.info("Job {} has passed".format(job.job_name))
+            log.info(f"Job {job.job_name} has passed")
             job.cleanup_outputs()
         # write the test results to influxdb
         if self.influx_writer:
@@ -73,11 +73,10 @@ class JobFactory(object):
             log.info("No jobs to be picked up found in the database")
             return
         # for each job in the database, start a new thread to pick it up
-        log.info("Picking up {} jobs".format(len(unfinished_jobs)))
+        log.info(f"Picking up {len(unfinished_jobs)} jobs")
         for job in unfinished_jobs:
             thread = threading.Thread(target=self.pickup_job, args=(job,))
             thread.start()
-        return
 
     def pickup_job(self, job):
         self.unfinished_jobs.append(job)
@@ -86,7 +85,7 @@ class JobFactory(object):
         else:
             job.finished_during_pickup()
         self.collect_job_results(job)
-        self.database.update_job_status(job, 1)  # 1 is the status for "Completed"
+        self.database.update_job_status(job, JOB_STATUS_COMPLETED)
 
     def construct_results(self, job, test_total_duration):
         testresult = {

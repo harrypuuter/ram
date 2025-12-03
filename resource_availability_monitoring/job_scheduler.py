@@ -1,8 +1,11 @@
-import schedule
-import threading
+import logging
 import queue
 import time
-import logging
+import threading
+
+import schedule
+
+from .constants import SCHEDULER_SLEEP_INTERVAL
 
 log = logging.getLogger(__name__)
 
@@ -26,15 +29,13 @@ class JobScheduler(object):
         self.scheduler = schedule.Scheduler()
 
     def schedule_job(self, job_config, job_name, interval):
-        log.info(
-            "Scheduling job {} with interval {} seconds".format(job_name, interval)
-        )
+        log.info(f"Scheduling job {job_name} with interval {interval} seconds")
         self.scheduler.every(interval).seconds.do(
             self.job_queue.put, (lambda: self.job_factory.run_job(job_config, job_name))
         )
 
     def run(self):
-        log.info("Starting {} workers".format(self.num_workers))
+        log.info(f"Starting {self.num_workers} workers")
         for i in range(self.num_workers):
             thread = threading.Thread(target=JobWorker(self.job_queue).run)
             thread.start()
@@ -46,4 +47,4 @@ class JobScheduler(object):
                 log.debug("First run complete, running jobs on schedule")
                 self.job_factory.report()
                 self.scheduler.run_pending()
-            time.sleep(10)
+            time.sleep(SCHEDULER_SLEEP_INTERVAL)

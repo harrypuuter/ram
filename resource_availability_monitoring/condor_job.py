@@ -1,9 +1,12 @@
+import logging
+import os
+import time
+from pathlib import Path
+
 import htcondor
 import yaml
-import time
-import os
-import logging
-from pathlib import Path
+
+from .constants import JOB_EVENT_LOG_STOP_AFTER
 
 log = logging.getLogger(__name__)
 
@@ -109,7 +112,7 @@ class HTCondorJob(object):
         jel = htcondor.JobEventLog(self.submission_dict["log"])
         true_timeout = self.submission_time + self.timeout
         while time.time() < true_timeout and not self.done_before_timeout:
-            for event in jel.events(stop_after=300):
+            for event in jel.events(stop_after=JOB_EVENT_LOG_STOP_AFTER):
                 if event.cluster != self.cluster_id or event.proc != 0:
                     continue
                 self.last_event_type = event.type
