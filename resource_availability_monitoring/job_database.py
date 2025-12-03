@@ -103,7 +103,7 @@ class JobDatabase(object):
         The function checks if there are any unfinished jobs in a SQLite database.
 
         Returns:
-          a boolean value. If there are any jobs in the database with a status 2, it will
+          a boolean value. If there are any jobs in the database with status JOB_STATUS_SUBMITTED (2), it will
         return True. Otherwise, it will return False.
         """
         with closing(sqlite3.connect(self.sqlite_file)) as conn:
@@ -156,6 +156,10 @@ class JobDatabase(object):
         should be retained in the database. Any jobs that were submitted before `retention_days` days ago
         will be deleted from the `jobs` table.
         """
+        # Validate retention_days is a positive integer
+        if not isinstance(retention_days, int) or retention_days < 0:
+            raise ValueError(f"retention_days must be a non-negative integer, got {retention_days}")
+        
         with closing(sqlite3.connect(self.sqlite_file)) as conn:
             with closing(conn.cursor()) as c:
                 c.execute(

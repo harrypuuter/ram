@@ -172,10 +172,15 @@ def get_enabled_job_config(config):
       an updated configuration dictionary that only includes the jobs that have the "enabled" parameter
     set to True.
     """
-    enabled_jobs = [
-        job for job in config["jobs"]
-        if job["parameters"]["enabled"]
-    ]
+    enabled_jobs = []
+    for job in config.get("jobs", []):
+        try:
+            if job.get("parameters", {}).get("enabled", False):
+                enabled_jobs.append(job)
+        except (KeyError, AttributeError, TypeError) as e:
+            log.warning(f"Skipping malformed job configuration: {e}")
+            continue
+    
     if not enabled_jobs:
         raise ValueError("No jobs enabled in config")
     return {"jobs": enabled_jobs}
