@@ -1,17 +1,21 @@
+import argparse
 import logging
+import shutil
+from pathlib import Path
+
+import htcondor
 import yaml
+
+from .constants import (
+    DEFAULT_CONFIG_FILE,
+    DEFAULT_INFLUX_CONFIG_FILE,
+    DEFAULT_JOB_DB_FILE,
+    DEFAULT_LOG_FILE,
+)
+from .influx_db_writer import InfluxDBWriter
+from .job_database import JobDatabase
 from .job_factory import JobFactory
 from .job_scheduler import JobScheduler
-from .job_database import JobDatabase
-from .influx_db_writer import InfluxDBWriter
-import argparse
-import htcondor
-import shutil
-
-# The line `from pathlib import Path` is importing the `Path` class from the `pathlib` module. The
-# `Path` class provides an object-oriented interface for working with file and directory paths. It
-# allows you to manipulate paths in a platform-independent way, regardless of the operating system.
-from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -104,13 +108,13 @@ def parse_args():
     args = parser.parse_args()
     # now set the defaults, if not given an argument
     if not args.config_file:
-        args.config_file = args.configdir / "config.yml"
+        args.config_file = args.configdir / DEFAULT_CONFIG_FILE
     if not args.influxdb_config_file:
-        args.influxdb_config_file = args.configdir / "influx_parameters.yml"
+        args.influxdb_config_file = args.configdir / DEFAULT_INFLUX_CONFIG_FILE
     if not args.job_db_file:
-        args.job_db_file = args.workdir / "jobs.sqlite3"
+        args.job_db_file = args.workdir / DEFAULT_JOB_DB_FILE
     if not args.log_file:
-        args.log_file = args.workdir / "resource-monitoring.log"
+        args.log_file = args.workdir / DEFAULT_LOG_FILE
     return args
 
 
@@ -168,13 +172,18 @@ def get_enabled_job_config(config):
       an updated configuration dictionary that only includes the jobs that have the "enabled" parameter
     set to True.
     """
-    updated_config = {"jobs": []}
-    for job in config["jobs"]:
-        if job["parameters"]["enabled"]:
-            updated_config["jobs"].append(job)
-    if len(updated_config["jobs"]) == 0:
+    enabled_jobs = []
+    for job in config.get("jobs", []):
+        try:
+            if job.get("parameters", {}).get("enabled", False):
+                enabled_jobs.append(job)
+        except (KeyError, AttributeError, TypeError) as e:
+            log.warning(f"Skipping malformed job configuration: {e}")
+            continue
+    
+    if not enabled_jobs:
         raise ValueError("No jobs enabled in config")
-    return updated_config
+    return {"jobs": enabled_jobs}
 
 
 def calculate_number_of_required_workers(config):
@@ -199,11 +208,10 @@ def check_config(config_file):
     """
     config = load_yaml(config_file)
     enabled_job_config = get_enabled_job_config(config)["jobs"]
-    testjobs = [enabled_job_config[x]["name"] for x in range(len(enabled_job_config))]
-    log.info("Enabled jobs: %s", testjobs)
+    testjobs = [job["name"] for job in enabled_job_config]
+    log.info(f"Enabled jobs: {testjobs}")
     log.info(
-        "Maximum number of required workers: %s",
-        calculate_number_of_required_workers(enabled_job_config),
+        f"Maximum number of required workers: {calculate_number_of_required_workers(enabled_job_config)}"
     )
     return enabled_job_config
 
@@ -246,19 +254,18 @@ def initialize_configs(configdir):
     """
     # if the configdir exists, and it is not empty, exit
     configdir = Path(configdir).absolute()
-    if Path(configdir).exists() and len(list(Path(configdir).iterdir())) > 0:
+    if configdir.exists() and len(list(configdir.iterdir())) > 0:
         log.error(
-            "Config directory %s already exists and is not empty. Exiting.", configdir
+            f"Config directory {configdir} already exists and is not empty. Exiting."
         )
         exit(1)
     log.info(
-        "Initializing tool for the first time, setting up a default config in %s",
-        configdir,
+        f"Initializing tool for the first time, setting up a default config in {configdir}"
     )
-    Path(configdir).mkdir(parents=True, exist_ok=True)
+    configdir.mkdir(parents=True, exist_ok=True)
     default_config = Path(__file__).parent / "default_configuration"
     shutil.copytree(default_config, configdir, dirs_exist_ok=True)
-    log.info("Default configuration copied to %s", configdir)
+    log.info(f"Default configuration copied to {configdir}")
     log.info("Please edit the configuration files to enable jobs and set parameters")
     exit(0)
 
@@ -278,10 +285,10 @@ def main_cli():
     # check if relevant config files exist
     for relevant_file in [args.config_file, args.influxdb_config_file]:
         if not Path(relevant_file).absolute().exists():
-            log.error("Not able to find %s. Exiting.", Path(relevant_file).absolute())
+            log.error(f"Not able to find {Path(relevant_file).absolute()}. Exiting.")
             exit(1)
     Path(args.workdir).absolute().mkdir(parents=True, exist_ok=True)
-    log.info("Using workdir: %s", Path(args.workdir).absolute())
+    log.info(f"Using workdir: {Path(args.workdir).absolute()}")
     if not args.no_influxdb:
         influx_writer = InfluxDBWriter(load_yaml(args.influxdb_config_file))
     else:

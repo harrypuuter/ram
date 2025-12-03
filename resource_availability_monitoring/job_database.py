@@ -1,9 +1,12 @@
 import sqlite3
-from .condor_job import HTCondorJob
-import pickle
-import logging
-import copy
+from contextlib import closing
 from pathlib import Path
+import copy
+import logging
+import pickle
+
+from .condor_job import HTCondorJob
+from .constants import DB_RETENTION_DAYS, JOB_STATUS_SUBMITTED
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ class JobDatabase(object):
         """
         self.sqlite_file = Path(sqlite_file).absolute()
         self.initialize()
-        self.cleanup_old_jobs(retention_days=7)
+        self.cleanup_old_jobs(retention_days=DB_RETENTION_DAYS)
 
     def initialize(self):
         """
@@ -30,18 +33,16 @@ class JobDatabase(object):
         database with a table called "jobs".
         """
         if not self.sqlite_file.exists():
-            log.info("Creating new database at {}".format(self.sqlite_file))
-            conn = sqlite3.connect(self.sqlite_file)
-            c = conn.cursor()
-            c.execute(
-                """CREATE TABLE IF NOT EXISTS jobs
-                         (jobid text, status integer, submissiontime timestamp, object blob)"""
-            )
-            conn.commit()
-            conn.close()
+            log.info(f"Creating new database at {self.sqlite_file}")
+            with closing(sqlite3.connect(self.sqlite_file)) as conn:
+                with closing(conn.cursor()) as c:
+                    c.execute(
+                        """CREATE TABLE IF NOT EXISTS jobs
+                                 (jobid text, status integer, submissiontime timestamp, object blob)"""
+                    )
+                    conn.commit()
         else:
-            log.debug("Database already exists at {}".format(self.sqlite_file))
-            # self.dump_database()
+            log.debug(f"Database already exists at {self.sqlite_file}")
 
     def dump_database(self):
         """
@@ -49,11 +50,10 @@ class JobDatabase(object):
         query on the "jobs" table, logs the fetched results, and then closes the database connection.
         """
         log.debug("Dumping db:")
-        conn = sqlite3.connect(self.sqlite_file)
-        c = conn.cursor()
-        c.execute("SELECT * FROM jobs")
-        log.debug(c.fetchall())
-        conn.close()
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute("SELECT * FROM jobs")
+                log.debug(c.fetchall())
 
     def add_job(self, job: HTCondorJob, status):
         """
@@ -67,23 +67,21 @@ class JobDatabase(object):
         could be a string or any other data type that represents the job's status, such as "running",
         "completed", "failed", etc.
         """
-        conn = sqlite3.connect(self.sqlite_file)
-        # convert the job object to a blob
-        log.debug("Adding job to database: {}".format(job.jobid()))
+        log.debug(f"Adding job to database: {job.jobid()}")
         job_pickle = pickle.dumps(job)
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO jobs VALUES (?, ?, ?, ?)",
-            (
-                job.jobid(),
-                status,
-                job.submission_time,
-                job_pickle,
-            ),
-        )
-        conn.commit()
-        log.debug("Job added to database: {}".format(job.jobid()))
-        conn.close()
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute(
+                    "INSERT INTO jobs VALUES (?, ?, ?, ?)",
+                    (
+                        job.jobid(),
+                        status,
+                        job.submission_time,
+                        job_pickle,
+                    ),
+                )
+                conn.commit()
+        log.debug(f"Job added to database: {job.jobid()}")
 
     def update_job_status(self, job: HTCondorJob, status):
         """
@@ -94,30 +92,25 @@ class JobDatabase(object):
           status: The `status` parameter is the new status that you want to update for the given job. It
         represents the current state or progress of the job.
         """
-        conn = sqlite3.connect(self.sqlite_file)
-        c = conn.cursor()
-        c.execute("UPDATE jobs SET status = ? WHERE jobid = ?", (status, job.jobid()))
-        conn.commit()
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute("UPDATE jobs SET status = ? WHERE jobid = ?", (status, job.jobid()))
+                conn.commit()
         log.debug(f"Updated job status of {job.jobid()} to {status}")
-        conn.close()
 
     def are_jobs_unfinished(self):
         """
         The function checks if there are any unfinished jobs in a SQLite database.
 
         Returns:
-          a boolean value. If there are any jobs in the database with a status 1, it will
+          a boolean value. If there are any jobs in the database with status JOB_STATUS_SUBMITTED (2), it will
         return True. Otherwise, it will return False.
         """
-        conn = sqlite3.connect(self.sqlite_file)
-        c = conn.cursor()
-        c.execute("SELECT * FROM jobs WHERE status == 2")
-        jobs = c.fetchall()
-        conn.close()
-        if len(jobs) > 0:
-            return True
-        else:
-            return False
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute("SELECT * FROM jobs WHERE status == ?", (JOB_STATUS_SUBMITTED,))
+                jobs = c.fetchall()
+        return len(jobs) > 0
 
     def get_unfinished_jobs(self):
         """
@@ -127,13 +120,12 @@ class JobDatabase(object):
         Returns:
           a list of HTCondorJob objects that represent unfinished jobs in the database.
         """
-        conn = sqlite3.connect(self.sqlite_file)
-        c = conn.cursor()
-        c.execute("SELECT * FROM jobs WHERE status == 2")
-        jobs = c.fetchall()
-        conn.close()
-        job_objects = []
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute("SELECT * FROM jobs WHERE status == ?", (JOB_STATUS_SUBMITTED,))
+                jobs = c.fetchall()
 
+        job_objects = []
         # need to convert the blob back to a HTCondorJob object
         for job in jobs:
             job_object = pickle.loads(job[3])
@@ -147,12 +139,11 @@ class JobDatabase(object):
         Returns:
           the total number of jobs in the database.
         """
-        conn = sqlite3.connect(self.sqlite_file)
-        c = conn.cursor()
-        c.execute("SELECT * FROM jobs WHERE status >= 0 ")
-        count = len(c.fetchall())
-        conn.close()
-        log.debug("Total number of jobs in database: {}".format(count))
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute("SELECT * FROM jobs WHERE status >= 0 ")
+                count = len(c.fetchall())
+        log.debug(f"Total number of jobs in database: {count}")
         return count
 
     def cleanup_old_jobs(self, retention_days):
@@ -165,10 +156,14 @@ class JobDatabase(object):
         should be retained in the database. Any jobs that were submitted before `retention_days` days ago
         will be deleted from the `jobs` table.
         """
-        conn = sqlite3.connect(self.sqlite_file)
-        c = conn.cursor()
-        c.execute(
-            f"DELETE FROM jobs WHERE strftime('%Y-%m-%d', submissiontime) < strftime('%Y-%m-%d', datetime('now', '-{retention_days} day'))"
-        )
-        conn.commit()
-        conn.close()
+        # Validate retention_days is a positive integer
+        if not isinstance(retention_days, int) or retention_days < 0:
+            raise ValueError(f"retention_days must be a non-negative integer, got {retention_days}")
+        
+        with closing(sqlite3.connect(self.sqlite_file)) as conn:
+            with closing(conn.cursor()) as c:
+                c.execute(
+                    "DELETE FROM jobs WHERE strftime('%Y-%m-%d', submissiontime) < strftime('%Y-%m-%d', datetime('now', '-' || ? || ' day'))",
+                    (retention_days,)
+                )
+                conn.commit()

@@ -1,8 +1,9 @@
+import datetime
+import logging
+import os
+
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
-import logging
-import datetime
-import os
 
 log = logging.getLogger(__name__)
 
@@ -17,10 +18,10 @@ class InfluxDBWriter(object):
             self.client = InfluxDBClient(url=self.url, token=self.token, org=self.org)
             log.info("Connected to InfluxDB")
         except Exception as e:
-            raise Exception("Failed to connect to InfluxDB: {}".format(e))
+            raise Exception(f"Failed to connect to InfluxDB: {e}") from e
 
     def write_to_influxdb(self, measurement, data_dict):
-        log.info("Writing data to influxdb: {}".format(data_dict))
+        log.info(f"Writing data to influxdb: {data_dict}")
         write_api = self.client.write_api(write_options=SYNCHRONOUS)
         submission_time = datetime.datetime.fromtimestamp(
             data_dict["submission_time"], datetime.timezone.utc

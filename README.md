@@ -4,7 +4,15 @@ This lightweight tool can be used to monitor the availability of resources and s
 
 ## Installation
 
-The tool is installed via pip:
+The tool can be installed via uv (recommended) or pip:
+
+### Using uv (recommended)
+
+```bash
+uv pip install resource-availability-monitoring
+```
+
+### Using pip
 
 ```bash
 pip install resource-availability-monitoring
@@ -127,7 +135,20 @@ ram-cli --configdir /path/to/your/configdir --workdir /path/to/your/workdir
 
 ### Systemd Service
 
-To run the service as a systemd service, some best practices should be followed. The service should be run as a dedicated user, and the configuration and workdir should be owned by this user. After the user is created, setup a python venv, where the package is installed:
+To run the service as a systemd service, some best practices should be followed. The service should be run as a dedicated user, and the configuration and workdir should be owned by this user. After the user is created, setup a python environment using uv:
+
+#### Using uv (recommended)
+```bash
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create a virtual environment and install the package
+uv venv /path/to/your/venv
+source /path/to/your/venv/bin/activate
+uv pip install resource-availability-monitoring
+```
+
+#### Using traditional venv
 ```bash
 python3 -m venv /path/to/your/venv
 source /path/to/your/venv/bin/activate

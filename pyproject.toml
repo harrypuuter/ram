@@ -1,11 +1,11 @@
-[tool.poetry]
+[project]
 name = "resource-availability-monitoring"
 version = "0.0.0"
 description = "A simple resource monitoring tool, that can be used to test availability of HTCondor resources."
-authors = ["Sebastian Brommer <brommer.sebastian@gmail.com>"]
-license = "{file = \"LICENSE\"}"
+authors = [{name = "Sebastian Brommer", email = "brommer.sebastian@gmail.com"}]
+license = {file = "LICENSE"}
 readme = "README.md"
-packages = [{include = "resource_availability_monitoring"}]
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -20,33 +20,30 @@ classifiers = [
     "Topic :: System :: Systems Administration",
     "Topic :: Utilities",
 ]
+dependencies = [
+    "htcondor>=23.4.0",
+    "PyYAML>=6.0.1",
+    "schedule>=1.2.1",
+    "influxdb-client>=1.40.0",
+]
 
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.2.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-htcondor = "^23.4.0"
-PyYAML = "^6.0.1"
-schedule = "^1.2.1"
-influxdb-client = "^1.40.0"
-
-[tool.poetry.group.dev.dependencies]
-poetry = "^1.7.1"
-
-[build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
-
-[tool.poetry.scripts]
+[project.scripts]
 ram-cli = "resource_availability_monitoring.__main__:main_cli"
 
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-pattern  = "^(?P<base>\\d+\\.\\d+\\.\\d+)(-?((?P<stage>[a-zA-Z]+)\\.?(?P<revision>\\d+)?))?"
-format-jinja = """
-    {%- if distance == 0 -%}
-        {{- base -}}
-    {%- else -%}
-        {{- base }}.dev{{ distance }}+g{{commit}}
-    {%- endif -%}
-"""
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "resource_availability_monitoring/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["resource_availability_monitoring"]
